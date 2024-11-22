@@ -36,120 +36,77 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.dropCrystals = dropCrystals;
 var database_1 = require("../database/database");
-var RequestType;
-(function (RequestType) {
-    RequestType[RequestType["SellerRequestChannel"] = 0] = "SellerRequestChannel";
-    RequestType[RequestType["ReviewChannel"] = 1] = "ReviewChannel";
-    RequestType[RequestType["ShopPostChannel"] = 2] = "ShopPostChannel";
-    RequestType[RequestType["VerifiedSellerRole"] = 3] = "VerifiedSellerRole";
-    RequestType[RequestType["AdminChannel"] = 4] = "AdminChannel";
-    RequestType[RequestType["BumpChannel"] = 5] = "BumpChannel";
-})(RequestType || (RequestType = {}));
-function returnData(type, interaction) {
+var discord_js_1 = require("discord.js");
+var fs = require("fs");
+var MAX_DROP = 1000;
+var RANDOM_STARS = "A beautiful shooting star leaves behind a faint blue trail as it streaks across the night sky. It moves swiftly and gracefully across the stars, leaving a brief trail of glowing blue dust in its wake. The light dims quickly, but for a moment there was a brilliant flash that illuminated the sky just as if the sun had suddenly risen in the middle of the night.\n\n> As the shooting star disappeared from sight, so too did the dazzling blue light that illuminated the sky. A soft woosh sound could be heard, followed by a faint patter. Then, as if by miracle of the night, tiny specks of glowing blue dust sprinkled the ground. The star fragments were too small and delicate to be held carelessly, but were nonetheless beautiful to behold in their own right. The soft glow that emanated from them seemed to dance in the wind and disappear as quickly as it came.";
+function dropCrystals(dropChannel, url) {
     return __awaiter(this, void 0, void 0, function () {
-        var data;
+        var config, randomDropNumber, actionRow, dropEmbed, message;
+        var _this = this;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, (0, database_1.execute)("SELECT * FROM guilds WHERE guild_id = ?", [
-                        interaction.guild.id,
-                    ])];
-                case 1:
-                    data = _a.sent();
-                    if (type === RequestType.SellerRequestChannel) {
-                        return [2 /*return*/, data[0].request_channel_id
-                                ? " - <#".concat(data[0].request_channel_id, ">")
-                                : ""];
-                    }
-                    if (type === RequestType.ReviewChannel) {
-                        return [2 /*return*/, data[0].review_channel_id
-                                ? " - <#".concat(data[0].review_channel_id, ">")
-                                : ""];
-                    }
-                    if (type === RequestType.ShopPostChannel) {
-                        return [2 /*return*/, data[0].shop_channel_id ? " - <#".concat(data[0].shop_channel_id, ">") : ""];
-                    }
-                    if (type === RequestType.VerifiedSellerRole) {
-                        return [2 /*return*/, data[0].verification_role_id
-                                ? " - <@&".concat(data[0].verification_role_id, ">")
-                                : ""];
-                    }
-                    if (type === RequestType.AdminChannel) {
-                        return [2 /*return*/, data[0].admin_channel ? " - <#".concat(data[0].admin_channel, ">") : ""];
-                    }
-                    if (type === RequestType.BumpChannel) {
-                        return [2 /*return*/, data[0].bump_channel ? " - <#".concat(data[0].bump_channel, ">") : ""];
-                    }
-                    return [2 /*return*/, ""];
-            }
-        });
-    });
-}
-// guild_id TEXT PRIMARY KEY,
-// review_channel_id TEXT,
-// shop_channel_id TEXT,
-// request_channel_id TEXT,
-// verification_role_id TEXT
-function isCreated(type, interaction) {
-    return __awaiter(this, void 0, void 0, function () {
-        var data, value, data, value, data, value, data, value, data, value, data, value;
-        var _a, _b, _c, _d, _e, _f;
-        return __generator(this, function (_g) {
-            switch (_g.label) {
                 case 0:
-                    if (!(type == RequestType.ReviewChannel)) return [3 /*break*/, 2];
-                    return [4 /*yield*/, (0, database_1.execute)("SELECT * FROM guilds WHERE guild_id = ?", [
-                            (_a = interaction.guild) === null || _a === void 0 ? void 0 : _a.id,
-                        ])];
+                    config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
+                    randomDropNumber = Math.round(Math.random() * MAX_DROP);
+                    actionRow = new discord_js_1.ActionRowBuilder().addComponents(new discord_js_1.ButtonBuilder()
+                        .setStyle(discord_js_1.ButtonStyle.Primary)
+                        .setCustomId("catch_star")
+                        .setEmoji("🪄")
+                        .setLabel("Catch"));
+                    dropEmbed = new discord_js_1.EmbedBuilder()
+                        .setTitle("✨ | New Star Drop!")
+                        .setImage("".concat(config.image))
+                        .setThumbnail(url)
+                        .setDescription("> ".concat(RANDOM_STARS, "\n> **Star Earnings**: ").concat(randomDropNumber, "\u2728.\n\n> - Click the button below to catch this star!\n> - Be fast.. you only have **1 hour** to catch the star before it disappears!"))
+                        .setTimestamp()
+                        .setColor("#6488EA");
+                    return [4 /*yield*/, dropChannel.send({
+                            embeds: [dropEmbed],
+                            components: [actionRow],
+                        })];
                 case 1:
-                    data = _g.sent();
-                    value = data[0]["review_channel_id"] ? "✅" : "❌";
-                    return [2 /*return*/, value];
+                    message = _a.sent();
+                    return [4 /*yield*/, (0, database_1.execute)("INSERT INTO stars (star_drop_amount, message_id) VALUES (?, ?)", [randomDropNumber, message.id])];
                 case 2:
-                    if (!(type == RequestType.SellerRequestChannel)) return [3 /*break*/, 4];
-                    return [4 /*yield*/, (0, database_1.execute)("SELECT * FROM guilds WHERE guild_id = ?", [
-                            (_b = interaction.guild) === null || _b === void 0 ? void 0 : _b.id,
-                        ])];
-                case 3:
-                    data = _g.sent();
-                    value = data[0]["request_channel_id"] ? "✅" : "❌";
-                    return [2 /*return*/, value];
-                case 4:
-                    if (!(type == RequestType.ShopPostChannel)) return [3 /*break*/, 6];
-                    return [4 /*yield*/, (0, database_1.execute)("SELECT * FROM guilds WHERE guild_id = ?", [
-                            (_c = interaction.guild) === null || _c === void 0 ? void 0 : _c.id,
-                        ])];
-                case 5:
-                    data = _g.sent();
-                    value = data[0]["shop_channel_id"] ? "✅" : "❌";
-                    return [2 /*return*/, value];
-                case 6:
-                    if (!(type == RequestType.AdminChannel)) return [3 /*break*/, 8];
-                    return [4 /*yield*/, (0, database_1.execute)("SELECT * FROM guilds WHERE guild_id = ?", [
-                            (_d = interaction.guild) === null || _d === void 0 ? void 0 : _d.id,
-                        ])];
-                case 7:
-                    data = _g.sent();
-                    value = data[0]["admin_channel"] ? "✅" : "❌";
-                    return [2 /*return*/, value];
-                case 8:
-                    if (!(type == RequestType.VerifiedSellerRole)) return [3 /*break*/, 10];
-                    return [4 /*yield*/, (0, database_1.execute)("SELECT * FROM guilds WHERE guild_id = ?", [
-                            (_e = interaction.guild) === null || _e === void 0 ? void 0 : _e.id,
-                        ])];
-                case 9:
-                    data = _g.sent();
-                    value = data[0]["verification_role_id"] ? "✅" : "❌";
-                    return [2 /*return*/, value];
-                case 10: return [4 /*yield*/, (0, database_1.execute)("SELECT * FROM guilds WHERE guild_id = ?", [
-                        (_f = interaction.guild) === null || _f === void 0 ? void 0 : _f.id,
-                    ])];
-                case 11:
-                    data = _g.sent();
-                    value = data[0]["bump_channel"] ? "✅" : "❌";
-                    return [2 /*return*/, value];
+                    _a.sent();
+                    setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
+                        var actionRow_1, Embed, e_1;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    _a.trys.push([0, 3, , 4]);
+                                    actionRow_1 = new discord_js_1.ActionRowBuilder().addComponents(new discord_js_1.ButtonBuilder()
+                                        .setStyle(discord_js_1.ButtonStyle.Primary)
+                                        .setCustomId("catch_star")
+                                        .setDisabled(true)
+                                        .setEmoji("🪄")
+                                        .setLabel("Catch"));
+                                    Embed = discord_js_1.EmbedBuilder.from(message.embeds[0]);
+                                    Embed.setDescription("> This star once shone within reach, but now it drifts beyond grasp, lost to the depths of a distant sky.\n\n> **This star cannot be caught anymore!**").setTitle("❌ | Star Out Of Reach!");
+                                    return [4 /*yield*/, message.edit({
+                                            embeds: [Embed],
+                                            components: [actionRow_1],
+                                            files: [],
+                                        })];
+                                case 1:
+                                    _a.sent();
+                                    return [4 /*yield*/, (0, database_1.execute)("DELETE FROM stars WHERE message_id = ?", [message.id])];
+                                case 2:
+                                    _a.sent();
+                                    return [3 /*break*/, 4];
+                                case 3:
+                                    e_1 = _a.sent();
+                                    console.log(e_1);
+                                    return [3 /*break*/, 4];
+                                case 4: return [2 /*return*/];
+                            }
+                        });
+                    }); }, 60 * 60 * 1000);
+                    return [2 /*return*/];
             }
         });
     });
 }
-module.exports = { isCreated: isCreated, returnData: returnData };
