@@ -52,13 +52,16 @@ async function Initialization() {
     await run(`PRAGMA foreign_keys = ON;`);
 
     await run(`CREATE TABLE IF NOT EXISTS trainings (
-      training_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      training_id TEXT PRIMARY KEY,
+      message_id TEXT,
+       thread_id TEXT,
       requester_id TEXT,
       trainer_id TEXT,
       stage TEXT, 
-      date TIMESTAMP,
+      date TEXT,
       time TEXT, 
-      department TEXT
+      department TEXT,
+      sent TEXT
     )`);
   } catch (err) {
     console.error("Initialization error:", err);

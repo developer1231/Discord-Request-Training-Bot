@@ -11,13 +11,11 @@ module.exports = {
     .setName("restart")
     .setDescription(`Restart the bot`),
   async execute(interaction) {
-    if (
-      !interaction.member.permissions.has(PermissionFlagsBits.Administrator)
-    ) {
+    if (interaction.member.id !== n.owner_id) {
       const Embed = new EmbedBuilder()
         .setTitle(":x: | Insufficient Permissions")
         .setDescription(
-          `> ${interaction.member}, you don't have the required \`\`Administrator\`\` permissions to be able to use this command.\n> Please refrain from using this command.`
+          `> ${interaction.member}, you don't have the required \`\`Owner\`\` permissions to be able to use this command.\n> Please refrain from using this command.`
         )
         .setTimestamp()
         .setAuthor({
@@ -30,14 +28,14 @@ module.exports = {
     const Success = new EmbedBuilder()
       .setTitle(":white_check_mark: | Successfully Scheduled Downtime")
       .setDescription(
-        `> ${interaction.member}, the bot will restart after exactly 1 minute.\n> Please do not use the bot in the mean time.\n> Use */status* to see whether the bot has finished restarting.`
+        `> ${interaction.member}, the bot will restart after exactly **1 minute**.\n> Please do not use the bot in the mean time.`
       )
       .setTimestamp()
       .setAuthor({
         name: `${interaction.client.user.username}`,
         iconURL: `${interaction.client.user.displayAvatarURL()}`,
       })
-      .setColor("Red");
+      .setColor("#686c70");
     await interaction.reply({ ephemeral: true, embeds: [Success] });
     setTimeout(async () => {
       process.exit(0);

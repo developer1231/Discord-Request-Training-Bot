@@ -19,6 +19,7 @@ const {
   ChannelSelectMenuBuilder,
   ChannelSelectMenuComponent,
   RoleSelectMenuBuilder,
+  ThreadAutoArchiveDuration,
 } = require("discord.js");
 const {
   Client,
@@ -128,73 +129,211 @@ client.on(Events.InteractionCreate, async (interaction) => {
       console.error(error);
     }
   }
-  if (interaction.isButton()) {
-    if (interaction.customId === "catch_star") {
-      let userData = await execute(`SELECT * FROM users WHERE member_id = ?`, [
-        interaction.member.id,
-      ]);
-      let starData = await execute(`SELECT * FROM stars WHERE message_id = ?`, [
-        interaction.message.id,
-      ]);
-      if (starData.length == 0) {
-        return interaction.reply({
-          ephemeral: true,
-          content: `> :x: This star already drifted away.... **You cannot catch the star anymore! Please be on the lookout for new stars!**`,
-        });
-      }
-      let triesData = await execute(
-        `SELECT * FROM tries WHERE member_id = ? AND star_id = ?`,
-        [interaction.member.id, starData[0].id]
+  if (interaction.isModalSubmit()) {
+    let data = await execute(`SELECT * FROM trainings WHERE trainer_id = ?`, [
+      interaction.member.id,
+    ]);
+    if (interaction.customId.startsWith("start-")) {
+      let channel = interaction.guild.channels.cache.find(
+        (r) => r.id === n.admin_channel
       );
-      if (triesData.length > 0) {
-        let dropEmbed = new EmbedBuilder()
-          .setTitle("❌ | Already Caught!")
-          .setDescription(
-            `> You already caught this star before and therefore cannot catch it again.\n> Please view your profile using */profile*.`
-          )
-          .setTimestamp()
-          .setAuthor({
-            name: `${interaction.client.user.username}`,
-            iconURL: `${interaction.client.user.displayAvatarURL()}`,
-          })
-          .setColor("#6488EA");
-        return interaction.reply({ ephemeral: true, embeds: [dropEmbed] });
-      }
-      if (userData.length == 0) {
-        await execute(
-          `INSERT INTO users (member_id, points, stars_caught) VALUES (?, ?, ?)`,
-          [interaction.member.id, 0, 0]
-        );
-      }
-      await execute(`INSERT INTO tries (member_id, star_id) VALUES (?, ?)`, [
-        interaction.member.id,
-        starData[0].id,
+      let message_id = interaction.customId.split("-")[1];
+      data = await execute(`SELECT * FROM trainings WHERE message_id = ?`, [
+        message_id,
       ]);
-      userData = await execute(`SELECT * FROM users WHERE member_id = ?`, [
-        interaction.member.id,
-      ]);
-      let old_caught = userData[0].stars_caught;
-      let old_points = userData[0].points;
-      await execute(
-        `UPDATE users SET stars_caught = ?, points = ? WHERE member_id = ?`,
-        [
-          Number(old_caught) + 1,
-          old_points + starData[0].star_drop_amount,
-          interaction.member.id,
-        ]
+      let member = await interaction.guild.members.cache.get(
+        data[0].requester_id
       );
-      let dropEmbed = new EmbedBuilder()
-        .setTitle("✅ | Successfully Caught!")
-        .setDescription(
-          `> You have successfully caught this star and earned ${starData[0].star_drop_amount}✨\n> Please view your profile using */profile*.`
-        )
-        .setTimestamp()
+      let modal_data = interaction.fields.getTextInputValue("send_dm");
+      const adminMessage = new EmbedBuilder()
+        .setColor("#686c70")
         .setAuthor({
           name: `${interaction.client.user.username}`,
           iconURL: `${interaction.client.user.displayAvatarURL()}`,
         })
-        .setColor("#6488EA");
-      return interaction.reply({ ephemeral: true, embeds: [dropEmbed] });
+        .setTitle("⚠️ | Admin sent a DM")
+        .setDescription(
+          `> Dear Administrators,\n> admin ${interaction.member} (${interaction.member.id}) has sent a dm to <@${data[0].requester_id}> (${data[0].requester_id}).\n> Please view the message below:\n\n\`\`\`${modal_data}\`\`\``
+        )
+        .setFooter({ text: `Training Request - DM` });
+      channel.send({ embeds: [adminMessage] });
+      const editor = new EmbedBuilder()
+        .setColor("#686c70")
+        .setAuthor({
+          name: `${interaction.client.user.username}`,
+          iconURL: `${interaction.client.user.displayAvatarURL()}`,
+        })
+        .setTitle("💬 | New incoming DM")
+        .setDescription(
+          `> Dear <@${data[0].requester_id}>, ${interaction.member} has sent you a DM regarding your training request you recently sent.\n> Please check the details down below:\n\`\`\`${modal_data}\`\`\``
+        )
+        .setFooter({ text: `Training Request - DM` });
+      await member.send({ embeds: [editor] });
+      await interaction.reply({
+        ephemeral: true,
+        content: `> :white_check_mark: Successfully sent this user a DM.`,
+      });
+    }
+  }
+  if (interaction.isButton()) {
+    if (interaction.customId === "send_dm") {
+      let data = await execute(`SELECT * FROM trainings WHERE message_id = ?`, [
+        interaction.message.id,
+      ]);
+      const modal = new ModalBuilder()
+        .setCustomId(`start-${interaction.message.id}`)
+        .setTitle("Send a DM");
+
+      const favoriteColorInput = new TextInputBuilder()
+        .setCustomId("send_dm")
+        .setLabel("Enter the message to send")
+        .setStyle(TextInputStyle.Paragraph);
+
+      const firstActionRow = new ActionRowBuilder().addComponents(
+        favoriteColorInput
+      );
+      modal.addComponents(firstActionRow);
+      await interaction.showModal(modal);
+    }
+    if (interaction.customId === "delete_channel") {
+      let data = await execute(`SELECT * FROM trainings WHERE thread_id = ?`, [
+        interaction.channel.id,
+      ]);
+      if (data[0].trainer_id !== interaction.member.id) {
+        return interaction.reply({
+          ephemeral: true,
+          content: `> :x: You cannot close the channel as it's tied to <@${data[0].trainer_id}>, which is the trainer assigned to this channel.`,
+        });
+      }
+
+      interaction.reply({
+        content: `> :white_check_mark: The channel has successfully been closed by ${interaction.member}. The channel will be deleted in exactly **30s**.`,
+      });
+      setTimeout(async () => {
+        await execute(`DELETE FROM trainings WHERE thread_id = ?`, [
+          interaction.channel.id,
+        ]);
+        interaction.channel.delete();
+      }, 30000);
+    }
+    if (interaction.customId === "claim") {
+      let training_channel = interaction.guild.channels.cache.get(
+        n.training_channel
+      );
+      let data = await execute(`SELECT * FROM trainings WHERE message_id = ?`, [
+        interaction.message.id,
+      ]);
+      await execute(
+        `UPDATE trainings SET trainer_id = ? WHERE message_id = ?`,
+        [interaction.member.id, interaction.message.id]
+      );
+
+      const action = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("claim")
+          .setEmoji("✅")
+          .setLabel("Claim")
+          .setStyle(ButtonStyle.Success)
+          .setDisabled(true),
+        new ButtonBuilder()
+          .setCustomId("send_dm")
+          .setEmoji("💬")
+          .setLabel("Send DM")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(true)
+      );
+      const dateParts = data[0].date.split("/"); // Assuming DD/MM/YY format
+      const formattedDate = `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`; // YYYY-MM-DD
+      const trainingDateTime = new Date(`${formattedDate}T${data[0].time}:00`); // Combine date and time
+      const unixTimestamp = Math.floor(trainingDateTime.getTime() / 1000); // Convert to Unix timestamp
+
+      const editor = new EmbedBuilder()
+        .setColor("Green")
+        .setAuthor({
+          name: `${interaction.client.user.username}`,
+          iconURL: `${interaction.client.user.displayAvatarURL()}`,
+        })
+        .setTitle("✅ | Training Request Accepted")
+        .setDescription(
+          `> A member has requested a training. Please view the details down below:\n` +
+            `> **Status:** 🟢 (Claimed)\n` +
+            `> **Claimer:** ${interaction.member} (${interaction.member.id})\n` +
+            `> **Thread Created?** Yes.\n` +
+            `### 👤 User Details\n` +
+            `> - ${interaction.member} - (${interaction.member?.user.id})\n` +
+            `### Request Details\n` +
+            `> **Stage:** ${data[0].stage}\n` +
+            `> **Date:** <t:${unixTimestamp}:D>\n` + // Displays full date (e.g., November 26, 2024)
+            `> **Time:** <t:${unixTimestamp}:T>\n` + // Displays full time (e.g., 21:20)
+            `> **Department:** ${data[0].department}\n\n` +
+            `> Interested? Click on the **Claim** button below.\n` +
+            `> Want to send the requester a message? Simply click on the **Send DM** button below.`
+        )
+        .setFooter({ text: `Training Request - Questions` });
+
+      await interaction.message.edit({
+        embeds: [editor],
+        components: [action],
+      });
+      const thread = await training_channel.threads.create({
+        name: `${interaction.member}-${data[0].requester_id}`,
+        autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek, // Auto-archive after 1 hour of inactivity
+        type: ChannelType.PrivateThread, // Ensure it's a private thread
+        reason: "Training thread",
+      });
+      await interaction.reply({
+        ephemeral: true,
+        content: `> :white_check_mark: Successfully accepted the training request. Please visit the private channel with the trainee at ${thread}.`,
+      });
+      await execute(`UPDATE trainings SET thread_id = ? WHERE message_id = ?`, [
+        thread.id,
+        interaction.message.id,
+      ]);
+      const action2 = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("delete_channel")
+          .setEmoji("🗑️")
+          .setLabel("Delete Channel")
+          .setStyle(ButtonStyle.Danger)
+          .setDisabled(false)
+      );
+      let z = await thread.send({
+        components: [action2],
+        content: `${interaction.member}, <@${data[0].requester_id}>, welcome to this thread! Here you can talk together and give/receive training. Once done, please click on the **Delete Channel** button that is attached to this message.\n\n> **Note**, only ${interaction.member} is allowed to close the channel.`,
+      });
+      await z.pin();
+
+      // Step 2: Add two users to the thread by their IDs
+      const userIds = [interaction.member.id, data[0].requester_id];
+      for (const userId of userIds) {
+        await thread.members.add(userId);
+      }
+
+      const toMember = new EmbedBuilder()
+        .setColor("Green")
+        .setAuthor({
+          name: `${interaction.client.user.username}`,
+          iconURL: `${interaction.client.user.displayAvatarURL()}`,
+        })
+        .setTitle("✅ | Training Request Accepted")
+        .setDescription(
+          `> Dear ${interaction.member}, someone has accepted your training request. Please view the confirmation details below:\n` +
+            `> **Status:** 🟢 (Claimed)\n` +
+            `> **Claimer:** ${interaction.member} (${interaction.member.id})\n` +
+            `### 👤 User Details\n` +
+            `> - ${interaction.member} - (${interaction.member?.user.id})\n` +
+            `### Request Details\n` +
+            `> **Stage:** ${data[0].stage}\n` +
+            `> **Date:** <t:${unixTimestamp}:D>\n` + // Full date format
+            `> **Time:** <t:${unixTimestamp}:T>\n` + // Full time format
+            `> **Department:** ${data[0].department}\n\n` +
+            `> A new private thread has been created between you and ${interaction.member}. Please visit this thread here: ${thread}.`
+        )
+        .setFooter({ text: `Training Request - Questions` });
+      let member = await interaction.guild.members.cache.get(
+        data[0].requester_id
+      );
+      await member.send({ embeds: [toMember] });
     }
   }
 });

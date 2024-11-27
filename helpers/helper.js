@@ -36,76 +36,611 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.dropCrystals = dropCrystals;
+exports.requestTraining = requestTraining;
 var database_1 = require("../database/database");
 var discord_js_1 = require("discord.js");
-var fs = require("fs");
-var MAX_DROP = 1000;
-var RANDOM_STARS = "A beautiful shooting star leaves behind a faint blue trail as it streaks across the night sky. It moves swiftly and gracefully across the stars, leaving a brief trail of glowing blue dust in its wake. The light dims quickly, but for a moment there was a brilliant flash that illuminated the sky just as if the sun had suddenly risen in the middle of the night.\n\n> As the shooting star disappeared from sight, so too did the dazzling blue light that illuminated the sky. A soft woosh sound could be heard, followed by a faint patter. Then, as if by miracle of the night, tiny specks of glowing blue dust sprinkled the ground. The star fragments were too small and delicate to be held carelessly, but were nonetheless beautiful to behold in their own right. The soft glow that emanated from them seemed to dance in the wind and disappear as quickly as it came.";
-function dropCrystals(dropChannel, url) {
+var config = require("../config.json");
+function requestTraining(interaction, page, trainingID) {
     return __awaiter(this, void 0, void 0, function () {
-        var config, randomDropNumber, actionRow, dropEmbed, message;
+        var introEmbed, question1Embed, dropdown, row, message, filter, collector_1, question1Embed, modalButton, actionRow, filter1, collector_2, question3Embed, dropdown, row, message, filter, collector;
         var _this = this;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
+        var _a, _b, _c, _d;
+        return __generator(this, function (_e) {
+            switch (_e.label) {
                 case 0:
-                    config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
-                    randomDropNumber = Math.round(Math.random() * MAX_DROP);
-                    actionRow = new discord_js_1.ActionRowBuilder().addComponents(new discord_js_1.ButtonBuilder()
-                        .setStyle(discord_js_1.ButtonStyle.Primary)
-                        .setCustomId("catch_star")
-                        .setEmoji("🪄")
-                        .setLabel("Catch"));
-                    dropEmbed = new discord_js_1.EmbedBuilder()
-                        .setTitle("✨ | New Star Drop!")
-                        .setImage("".concat(config.image))
-                        .setThumbnail(url)
-                        .setDescription("> ".concat(RANDOM_STARS, "\n> **Star Earnings**: ").concat(randomDropNumber, "\u2728.\n\n> - Click the button below to catch this star!\n> - Be fast.. you only have **1 hour** to catch the star before it disappears!"))
-                        .setTimestamp()
-                        .setColor("#6488EA");
-                    return [4 /*yield*/, dropChannel.send({
-                            embeds: [dropEmbed],
+                    if (!(page === 1 /* TrainingPaginator.INTRODUCTION */)) return [3 /*break*/, 3];
+                    return [4 /*yield*/, (0, database_1.execute)("INSERT INTO trainings (training_id, message_id, thread_id, requester_id, trainer_id, stage, date, time, department, sent) VALUES (?, ?, ?, ?, ?, ?, ? ,? ,?, ?)", [
+                            trainingID,
+                            null,
+                            null,
+                            (_a = interaction.member) === null || _a === void 0 ? void 0 : _a.user.id,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            false,
+                        ])];
+                case 1:
+                    _e.sent();
+                    introEmbed = new discord_js_1.EmbedBuilder()
+                        .setColor("#686c70")
+                        .setAuthor({
+                        name: "".concat(interaction.client.user.username),
+                        iconURL: "".concat(interaction.client.user.displayAvatarURL()),
+                    })
+                        .setTitle("💬 | Training Request - Introduction")
+                        .setDescription("> Dear ".concat(interaction.member, ", so you are interested in sending out a training request? Well, you are at the right place.\n> In exactly **15** seconds, this embed will be edited and reveal the first question to help you on your way! In total, there are **5** questions, which we will be sending along your training request. This way the trainers directly know what you need!"))
+                        .setFooter({ text: "Training Request - Questions" });
+                    return [4 /*yield*/, interaction.reply({
+                            ephemeral: true,
+                            embeds: [introEmbed],
+                        })];
+                case 2:
+                    _e.sent();
+                    setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0: return [4 /*yield*/, requestTraining(interaction, 2 /* TrainingPaginator.Q1 */, trainingID)];
+                                case 1:
+                                    _a.sent();
+                                    return [2 /*return*/];
+                            }
+                        });
+                    }); }, 15000);
+                    return [3 /*break*/, 9];
+                case 3:
+                    if (!(page == 2 /* TrainingPaginator.Q1 */)) return [3 /*break*/, 5];
+                    question1Embed = new discord_js_1.EmbedBuilder()
+                        .setColor("#686c70")
+                        .setAuthor({
+                        name: "".concat(interaction.client.user.username),
+                        iconURL: "".concat(interaction.client.user.displayAvatarURL()),
+                    })
+                        .setTitle("💬 | Training Request - Stage")
+                        .setDescription("Dear ".concat(interaction.member, ", please enter your **Stage** from the dropdown below.\n\n> - **\u26A0\uFE0F Disclaimer**: You have exactly **60s** to answer."))
+                        .setFooter({ text: "Training Request - Questions" });
+                    dropdown = new discord_js_1.StringSelectMenuBuilder()
+                        .setCustomId("stage-select") // Custom ID for the select menu
+                        .setPlaceholder("Select your stage") // Placeholder text
+                        .addOptions([
+                        {
+                            label: "Stage 2",
+                            description: "You are in stage 2",
+                            value: "stage_2",
+                        },
+                        {
+                            label: "Stage 3",
+                            description: "You are in stage 3",
+                            value: "stage_3",
+                        },
+                        {
+                            label: "Stage 4",
+                            description: "You are in stage 4",
+                            value: "stage_4",
+                        },
+                        {
+                            label: "Stage FA",
+                            description: "You are in stage FA",
+                            value: "stage_fa",
+                        },
+                    ]);
+                    row = new discord_js_1.ActionRowBuilder().addComponents(dropdown);
+                    return [4 /*yield*/, interaction.editReply({
+                            embeds: [question1Embed],
+                            components: [row],
+                        })];
+                case 4:
+                    message = _e.sent();
+                    try {
+                        filter = function (i) {
+                            return i.customId === "stage-select" && i.user.id === interaction.user.id;
+                        };
+                        collector_1 = (_b = interaction.channel) === null || _b === void 0 ? void 0 : _b.createMessageComponentCollector({
+                            filter: filter,
+                            componentType: discord_js_1.ComponentType.StringSelect,
+                            time: 60000,
+                        });
+                        collector_1 === null || collector_1 === void 0 ? void 0 : collector_1.on("collect", function (i) { return __awaiter(_this, void 0, void 0, function () {
+                            var selectedValues;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        selectedValues = i.values[0];
+                                        return [4 /*yield*/, i.deferUpdate()];
+                                    case 1:
+                                        _a.sent();
+                                        collector_1.stop();
+                                        if (!(selectedValues === "stage_2")) return [3 /*break*/, 3];
+                                        return [4 /*yield*/, (0, database_1.execute)("UPDATE trainings SET stage = ? WHERE training_id = ?", ["Stage 2", trainingID])];
+                                    case 2:
+                                        _a.sent();
+                                        return [3 /*break*/, 9];
+                                    case 3:
+                                        if (!(selectedValues === "stage_3")) return [3 /*break*/, 5];
+                                        return [4 /*yield*/, (0, database_1.execute)("UPDATE trainings SET stage = ? WHERE training_id = ?", ["Stage 3", trainingID])];
+                                    case 4:
+                                        _a.sent();
+                                        return [3 /*break*/, 9];
+                                    case 5:
+                                        if (!(selectedValues === "stage_4")) return [3 /*break*/, 7];
+                                        return [4 /*yield*/, (0, database_1.execute)("UPDATE trainings SET stage = ? WHERE training_id = ?", ["Stage 4", trainingID])];
+                                    case 6:
+                                        _a.sent();
+                                        return [3 /*break*/, 9];
+                                    case 7: return [4 /*yield*/, (0, database_1.execute)("UPDATE trainings SET stage = ? WHERE training_id = ?", ["Stage FA", trainingID])];
+                                    case 8:
+                                        _a.sent();
+                                        _a.label = 9;
+                                    case 9: return [4 /*yield*/, requestTraining(interaction, 3 /* TrainingPaginator.Q2 */, trainingID)];
+                                    case 10:
+                                        _a.sent();
+                                        return [2 /*return*/];
+                                }
+                            });
+                        }); });
+                        collector_1 === null || collector_1 === void 0 ? void 0 : collector_1.on("end", function (collected, reason) { return __awaiter(_this, void 0, void 0, function () {
+                            var tooLate;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        if (!(reason === "time" && collected.size == 0)) return [3 /*break*/, 3];
+                                        return [4 /*yield*/, (0, database_1.execute)("DELETE FROM trainings WHERE training_id = ?", [
+                                                trainingID,
+                                            ])];
+                                    case 1:
+                                        _a.sent();
+                                        tooLate = new discord_js_1.EmbedBuilder()
+                                            .setColor("Red")
+                                            .setAuthor({
+                                            name: "".concat(interaction.client.user.username),
+                                            iconURL: "".concat(interaction.client.user.displayAvatarURL()),
+                                        })
+                                            .setTitle(":x: | Late Reply")
+                                            .setDescription("Dear ".concat(interaction.member, ", you did not answer in **60s**. Hence the input will be closed."))
+                                            .setFooter({ text: "Training Request - Questions" });
+                                        return [4 /*yield*/, interaction.editReply({
+                                                components: [],
+                                                embeds: [tooLate],
+                                            })];
+                                    case 2:
+                                        _a.sent();
+                                        _a.label = 3;
+                                    case 3: return [2 /*return*/];
+                                }
+                            });
+                        }); });
+                    }
+                    catch (e) {
+                        console.log(e);
+                    }
+                    return [3 /*break*/, 9];
+                case 5:
+                    if (!(3 /* TrainingPaginator.Q2 */ === page)) return [3 /*break*/, 7];
+                    console.log("test");
+                    question1Embed = new discord_js_1.EmbedBuilder()
+                        .setColor("#686c70")
+                        .setAuthor({
+                        name: "".concat(interaction.client.user.username),
+                        iconURL: "".concat(interaction.client.user.displayAvatarURL()),
+                    })
+                        .setTitle("💬 | Training Request - Date & Time")
+                        .setDescription("Dear ".concat(interaction.member, ", please enter the **Date and Time:** in format (DD/MM/YY) and (15:05) respectively.\n\n> - **\u26A0\uFE0F Disclaimer**: You have exactly **60s** to answer.\n> - Click on the **Enter Date & Time** button below to open the modal."))
+                        .setFooter({ text: "Training Request - Questions" });
+                    modalButton = new discord_js_1.ButtonBuilder()
+                        .setCustomId("open-date-modal")
+                        .setLabel("Enter Date & Time")
+                        .setStyle(discord_js_1.ButtonStyle.Primary);
+                    actionRow = new discord_js_1.ActionRowBuilder().addComponents(modalButton);
+                    return [4 /*yield*/, interaction.editReply({
+                            embeds: [question1Embed],
                             components: [actionRow],
                         })];
-                case 1:
-                    message = _a.sent();
-                    return [4 /*yield*/, (0, database_1.execute)("INSERT INTO stars (star_drop_amount, message_id) VALUES (?, ?)", [randomDropNumber, message.id])];
-                case 2:
-                    _a.sent();
-                    setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
-                        var actionRow_1, Embed, e_1;
+                case 6:
+                    _e.sent();
+                    filter1 = function (i) {
+                        return i.customId === "open-date-modal" && i.user.id === interaction.user.id;
+                    };
+                    collector_2 = (_c = interaction.channel) === null || _c === void 0 ? void 0 : _c.createMessageComponentCollector({
+                        filter: filter1,
+                        componentType: discord_js_1.ComponentType.Button,
+                        time: 60000,
+                    });
+                    collector_2 === null || collector_2 === void 0 ? void 0 : collector_2.on("collect", function (i) { return __awaiter(_this, void 0, void 0, function () {
+                        var modal, dateInput, timeInput, row1, row2, filter;
+                        var _this = this;
                         return __generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0:
-                                    _a.trys.push([0, 3, , 4]);
-                                    actionRow_1 = new discord_js_1.ActionRowBuilder().addComponents(new discord_js_1.ButtonBuilder()
-                                        .setStyle(discord_js_1.ButtonStyle.Primary)
-                                        .setCustomId("catch_star")
-                                        .setDisabled(true)
-                                        .setEmoji("🪄")
-                                        .setLabel("Catch"));
-                                    Embed = discord_js_1.EmbedBuilder.from(message.embeds[0]);
-                                    Embed.setDescription("> This star once shone within reach, but now it drifts beyond grasp, lost to the depths of a distant sky.\n\n> **This star cannot be caught anymore!**").setTitle("❌ | Star Out Of Reach!");
-                                    return [4 /*yield*/, message.edit({
-                                            embeds: [Embed],
-                                            components: [actionRow_1],
-                                            files: [],
-                                        })];
+                                    collector_2.stop();
+                                    if (!(i.customId === "open-date-modal")) return [3 /*break*/, 2];
+                                    modal = new discord_js_1.ModalBuilder()
+                                        .setCustomId("date-modal")
+                                        .setTitle("Enter Date & Time");
+                                    dateInput = new discord_js_1.TextInputBuilder()
+                                        .setCustomId("date-input")
+                                        .setLabel("Enter date (YY/MM/DD)")
+                                        .setPlaceholder("24/11/22")
+                                        .setStyle(discord_js_1.TextInputStyle.Short);
+                                    timeInput = new discord_js_1.TextInputBuilder()
+                                        .setCustomId("time-input")
+                                        .setLabel("Enter time (HH:MM)")
+                                        .setPlaceholder("15:05")
+                                        .setStyle(discord_js_1.TextInputStyle.Short);
+                                    row1 = new discord_js_1.ActionRowBuilder().addComponents(dateInput);
+                                    row2 = new discord_js_1.ActionRowBuilder().addComponents(timeInput);
+                                    modal.addComponents(row1, row2);
+                                    return [4 /*yield*/, i.showModal(modal)];
                                 case 1:
                                     _a.sent();
-                                    return [4 /*yield*/, (0, database_1.execute)("DELETE FROM stars WHERE message_id = ?", [message.id])];
-                                case 2:
-                                    _a.sent();
-                                    return [3 /*break*/, 4];
-                                case 3:
-                                    e_1 = _a.sent();
-                                    console.log(e_1);
-                                    return [3 /*break*/, 4];
-                                case 4: return [2 /*return*/];
+                                    filter = function (i) {
+                                        return i.customId === "date-modal" && i.user.id === interaction.user.id;
+                                    };
+                                    interaction
+                                        .awaitModalSubmit({ filter: filter, time: 60000 })
+                                        .then(function (modalInteraction) { return __awaiter(_this, void 0, void 0, function () {
+                                        var dateRegex, timeRegex, enteredDate, enteredTime;
+                                        return __generator(this, function (_a) {
+                                            switch (_a.label) {
+                                                case 0:
+                                                    dateRegex = /^\d{2}\/\d{2}\/\d{2}$/;
+                                                    timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+                                                    enteredDate = modalInteraction.fields.getTextInputValue("date-input");
+                                                    enteredTime = modalInteraction.fields.getTextInputValue("time-input");
+                                                    if (!!dateRegex.test(enteredDate)) return [3 /*break*/, 3];
+                                                    return [4 /*yield*/, modalInteraction.reply({
+                                                            ephemeral: true,
+                                                            content: "> :x: Invalid date format. Please use `YY/MM/DD` (e.g., 24/11/22). Please use */reqtraining* again.",
+                                                        })];
+                                                case 1:
+                                                    _a.sent();
+                                                    return [4 /*yield*/, (0, database_1.execute)("DELETE FROM trainings WHERE training_id = ?", [
+                                                            trainingID,
+                                                        ])];
+                                                case 2:
+                                                    _a.sent();
+                                                    return [2 /*return*/];
+                                                case 3:
+                                                    if (!!timeRegex.test(enteredTime)) return [3 /*break*/, 6];
+                                                    return [4 /*yield*/, modalInteraction.reply({
+                                                            ephemeral: true,
+                                                            content: "> :x: Invalid time format. Please use `HH:MM` in 24-hour format (e.g., 15:05). Please use */reqtraining* again.",
+                                                        })];
+                                                case 4:
+                                                    _a.sent();
+                                                    return [4 /*yield*/, (0, database_1.execute)("DELETE FROM trainings WHERE training_id = ?", [
+                                                            trainingID,
+                                                        ])];
+                                                case 5:
+                                                    _a.sent();
+                                                    return [2 /*return*/];
+                                                case 6: return [4 /*yield*/, (0, database_1.execute)("UPDATE trainings SET date = ?, time = ? WHERE training_id = ?", [enteredDate, enteredTime, trainingID])];
+                                                case 7:
+                                                    _a.sent();
+                                                    return [4 /*yield*/, modalInteraction.deferUpdate()];
+                                                case 8:
+                                                    _a.sent();
+                                                    return [4 /*yield*/, requestTraining(interaction, 4 /* TrainingPaginator.Q3 */, trainingID)];
+                                                case 9:
+                                                    _a.sent();
+                                                    return [2 /*return*/];
+                                            }
+                                        });
+                                    }); })
+                                        .catch(function (error) { return __awaiter(_this, void 0, void 0, function () {
+                                        var tooLate;
+                                        return __generator(this, function (_a) {
+                                            switch (_a.label) {
+                                                case 0:
+                                                    console.log(error);
+                                                    tooLate = new discord_js_1.EmbedBuilder()
+                                                        .setColor("Red")
+                                                        .setAuthor({
+                                                        name: "".concat(interaction.client.user.username),
+                                                        iconURL: "".concat(interaction.client.user.displayAvatarURL()),
+                                                    })
+                                                        .setTitle(":x: | Late Reply")
+                                                        .setDescription("Dear ".concat(interaction.member, ", you did not answer in **60s**. Hence the input will be closed."))
+                                                        .setFooter({ text: "Training Request - Questions" });
+                                                    return [4 /*yield*/, interaction.editReply({
+                                                            components: [],
+                                                            embeds: [tooLate],
+                                                        })];
+                                                case 1:
+                                                    _a.sent();
+                                                    return [2 /*return*/];
+                                            }
+                                        });
+                                    }); });
+                                    _a.label = 2;
+                                case 2: return [2 /*return*/];
                             }
                         });
-                    }); }, 60 * 60 * 1000);
-                    return [2 /*return*/];
+                    }); });
+                    collector_2 === null || collector_2 === void 0 ? void 0 : collector_2.on("end", function (collected, reason) { return __awaiter(_this, void 0, void 0, function () {
+                        var tooLate;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    console.log();
+                                    if (!(reason === "time" && collected.size == 0)) return [3 /*break*/, 3];
+                                    return [4 /*yield*/, (0, database_1.execute)("DELETE FROM trainings WHERE training_id = ?", [
+                                            trainingID,
+                                        ])];
+                                case 1:
+                                    _a.sent();
+                                    tooLate = new discord_js_1.EmbedBuilder()
+                                        .setColor("Red")
+                                        .setAuthor({
+                                        name: "".concat(interaction.client.user.username),
+                                        iconURL: "".concat(interaction.client.user.displayAvatarURL()),
+                                    })
+                                        .setTitle(":x: | Late Reply")
+                                        .setDescription("Dear ".concat(interaction.member, ", you did not answer in **60s**. Hence the input will be closed."))
+                                        .setFooter({ text: "Training Request - Questions" });
+                                    return [4 /*yield*/, interaction.editReply({
+                                            components: [],
+                                            embeds: [tooLate],
+                                        })];
+                                case 2:
+                                    _a.sent();
+                                    _a.label = 3;
+                                case 3: return [2 /*return*/];
+                            }
+                        });
+                    }); });
+                    return [3 /*break*/, 9];
+                case 7:
+                    if (!(4 /* TrainingPaginator.Q3 */ === page)) return [3 /*break*/, 9];
+                    question3Embed = new discord_js_1.EmbedBuilder()
+                        .setColor("#686c70")
+                        .setAuthor({
+                        name: "".concat(interaction.client.user.username),
+                        iconURL: "".concat(interaction.client.user.displayAvatarURL()),
+                    })
+                        .setTitle("💬 | Training Request")
+                        .setDescription("Dear ".concat(interaction.member, ", please enter your **Department** from the dropdown below.\n\n> - **\u26A0\uFE0F Disclaimer**: You have exactly **60s** to answer."))
+                        .setFooter({ text: "Training Request - Questions" });
+                    dropdown = new discord_js_1.StringSelectMenuBuilder()
+                        .setCustomId("department-select")
+                        .setPlaceholder("Select your department")
+                        .addOptions([
+                        {
+                            label: "Captain",
+                            description: "Captain Department",
+                            value: "captain",
+                        },
+                        {
+                            label: "First Officer",
+                            description: "First Officer Department",
+                            value: "first_officer",
+                        },
+                        {
+                            label: "Flight Attendant",
+                            description: "Flight Attendant Department",
+                            value: "flight_attendant",
+                        },
+                        {
+                            label: "Airport Staff",
+                            description: "Airport Staff Department",
+                            value: "airport_staff",
+                        },
+                        {
+                            label: "Ground Crew",
+                            description: "Ground Crew Department",
+                            value: "ground_crew",
+                        },
+                    ]);
+                    row = new discord_js_1.ActionRowBuilder().addComponents(dropdown);
+                    return [4 /*yield*/, interaction.editReply({
+                            embeds: [question3Embed],
+                            components: [row],
+                        })];
+                case 8:
+                    message = _e.sent();
+                    try {
+                        filter = function (i) {
+                            return i.customId === "department-select" && i.user.id === interaction.user.id;
+                        };
+                        collector = (_d = interaction.channel) === null || _d === void 0 ? void 0 : _d.createMessageComponentCollector({
+                            filter: filter,
+                            componentType: discord_js_1.ComponentType.StringSelect,
+                            time: 60000,
+                        });
+                        collector === null || collector === void 0 ? void 0 : collector.on("collect", function (i) { return __awaiter(_this, void 0, void 0, function () {
+                            var selectedValues, Captaindata, fodata, fadata, asdata, gcdata, toChannel_1, sentEmbed, userData, dateParts, formattedDate, trainingDateTime, unixTimestamp, role_to_ping, toChannel, trainingChannel, action, textChannel, message_1;
+                            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+                            return __generator(this, function (_o) {
+                                switch (_o.label) {
+                                    case 0:
+                                        selectedValues = i.values[0];
+                                        return [4 /*yield*/, (0, database_1.execute)("select * from trainings WHERE requester_id = ? AND trainer_id IS NULL AND department = ?", [(_a = interaction === null || interaction === void 0 ? void 0 : interaction.member) === null || _a === void 0 ? void 0 : _a.user.id, "Captain"])];
+                                    case 1:
+                                        Captaindata = _o.sent();
+                                        return [4 /*yield*/, (0, database_1.execute)("select * from trainings WHERE requester_id = ? AND trainer_id IS NULL AND department = ?", [(_b = interaction === null || interaction === void 0 ? void 0 : interaction.member) === null || _b === void 0 ? void 0 : _b.user.id, "First Officer"])];
+                                    case 2:
+                                        fodata = _o.sent();
+                                        return [4 /*yield*/, (0, database_1.execute)("select * from trainings WHERE requester_id = ? AND trainer_id IS NULL AND department = ?", [(_c = interaction === null || interaction === void 0 ? void 0 : interaction.member) === null || _c === void 0 ? void 0 : _c.user.id, "Flight Attendant"])];
+                                    case 3:
+                                        fadata = _o.sent();
+                                        return [4 /*yield*/, (0, database_1.execute)("select * from trainings WHERE requester_id = ? AND trainer_id IS NULL AND department = ?", [(_d = interaction === null || interaction === void 0 ? void 0 : interaction.member) === null || _d === void 0 ? void 0 : _d.user.id, "Airport Staff"])];
+                                    case 4:
+                                        asdata = _o.sent();
+                                        return [4 /*yield*/, (0, database_1.execute)("select * from trainings WHERE requester_id = ? AND trainer_id IS NULL AND department = ?", [(_e = interaction === null || interaction === void 0 ? void 0 : interaction.member) === null || _e === void 0 ? void 0 : _e.user.id, "Ground Crew"])];
+                                    case 5:
+                                        gcdata = _o.sent();
+                                        return [4 /*yield*/, i.deferUpdate()];
+                                    case 6:
+                                        _o.sent();
+                                        if (Captaindata.length > 0 ||
+                                            fodata.length > 0 ||
+                                            fadata.length > 0 ||
+                                            asdata.length > 0 ||
+                                            gcdata.length > 0) {
+                                            toChannel_1 = new discord_js_1.EmbedBuilder()
+                                                .setColor("Red")
+                                                .setAuthor({
+                                                name: "".concat(interaction.client.user.username),
+                                                iconURL: "".concat(interaction.client.user.displayAvatarURL()),
+                                            })
+                                                .setTitle(":x: | Already Sent a Request")
+                                                .setDescription("> Dear ".concat(interaction.member, ", you have sadly already sent a request for the selected department, that has not been answered yet. Please wait until your request is answered before publishing another one for this department, or select a different department.\n> The input has been closed. Please use */reqtraining* again."))
+                                                .setFooter({ text: "Training Request - Error" });
+                                            return [2 /*return*/, interaction.editReply({
+                                                    embeds: [toChannel_1],
+                                                })];
+                                        }
+                                        if (!(selectedValues === "captain")) return [3 /*break*/, 8];
+                                        return [4 /*yield*/, (0, database_1.execute)("UPDATE trainings SET department = ? WHERE training_id = ?", ["Captain", trainingID])];
+                                    case 7:
+                                        _o.sent();
+                                        return [3 /*break*/, 16];
+                                    case 8:
+                                        if (!(selectedValues === "first_officer")) return [3 /*break*/, 10];
+                                        return [4 /*yield*/, (0, database_1.execute)("UPDATE trainings SET department = ? WHERE training_id = ?", ["First Officer", trainingID])];
+                                    case 9:
+                                        _o.sent();
+                                        return [3 /*break*/, 16];
+                                    case 10:
+                                        if (!(selectedValues === "flight_attendant")) return [3 /*break*/, 12];
+                                        return [4 /*yield*/, (0, database_1.execute)("UPDATE trainings SET department = ? WHERE training_id = ?", ["Flight Attendant", trainingID])];
+                                    case 11:
+                                        _o.sent();
+                                        return [3 /*break*/, 16];
+                                    case 12:
+                                        if (!(selectedValues === "airport_staff")) return [3 /*break*/, 14];
+                                        return [4 /*yield*/, (0, database_1.execute)("UPDATE trainings SET department = ? WHERE training_id = ?", ["Airport Staff", trainingID])];
+                                    case 13:
+                                        _o.sent();
+                                        return [3 /*break*/, 16];
+                                    case 14: return [4 /*yield*/, (0, database_1.execute)("UPDATE trainings SET department = ? WHERE training_id = ?", ["Ground Crew", trainingID])];
+                                    case 15:
+                                        _o.sent();
+                                        _o.label = 16;
+                                    case 16:
+                                        sentEmbed = new discord_js_1.EmbedBuilder()
+                                            .setColor("Green")
+                                            .setAuthor({
+                                            name: "".concat(interaction.client.user.username),
+                                            iconURL: "".concat(interaction.client.user.displayAvatarURL()),
+                                        })
+                                            .setTitle("✅ | Request Sent!")
+                                            .setDescription("> Dear ".concat(interaction.member, ", you have successfully filled in the training request details. The message has been sent in the training channel, and you will be notified when a trainer accepts your request."))
+                                            .setFooter({
+                                            text: "Remember, if your training isn't accepted by the time that your training is supposed to start, the training will be automatically closed.",
+                                        });
+                                        return [4 /*yield*/, (0, database_1.execute)("SELECT * FROM trainings WHERE training_id = ?", [trainingID])];
+                                    case 17:
+                                        userData = _o.sent();
+                                        dateParts = userData[0].date.split("/");
+                                        formattedDate = "20".concat(dateParts[2], "-").concat(dateParts[1], "-").concat(dateParts[0]);
+                                        trainingDateTime = new Date("".concat(formattedDate, "T").concat(userData[0].time, ":00"));
+                                        unixTimestamp = Math.floor(trainingDateTime.getTime() / 1000);
+                                        if (userData[0].department == "Ground Crew") {
+                                            role_to_ping = (_f = interaction.guild) === null || _f === void 0 ? void 0 : _f.roles.cache.find(function (role) { return role.id === config.ground_crew_role; });
+                                        }
+                                        if (userData[0].department == "Airport Staff") {
+                                            role_to_ping = (_g = interaction.guild) === null || _g === void 0 ? void 0 : _g.roles.cache.find(function (role) { return role.id === config.airport_staff; });
+                                        }
+                                        if (userData[0].department == "Flight Attendant") {
+                                            role_to_ping = (_h = interaction.guild) === null || _h === void 0 ? void 0 : _h.roles.cache.find(function (role) { return role.id === config.flight_attendant; });
+                                        }
+                                        if (userData[0].department == "First Officer") {
+                                            role_to_ping = (_j = interaction.guild) === null || _j === void 0 ? void 0 : _j.roles.cache.find(function (role) { return role.id === config.first_officer; });
+                                        }
+                                        if (userData[0].department == "Captain") {
+                                            role_to_ping = (_k = interaction.guild) === null || _k === void 0 ? void 0 : _k.roles.cache.find(function (role) { return role.id === config.captain; });
+                                        }
+                                        toChannel = new discord_js_1.EmbedBuilder()
+                                            .setColor("#686c70")
+                                            .setAuthor({
+                                            name: "".concat(interaction.client.user.username),
+                                            iconURL: "".concat(interaction.client.user.displayAvatarURL()),
+                                        })
+                                            .setTitle("💬 | Incoming Training Request")
+                                            .setDescription("> A member has requested a training. Please view the details down below:\n" +
+                                            "> **Status:** \uD83D\uDD34 (Unclaimed)\n" +
+                                            "### \uD83D\uDC64 User Details\n" +
+                                            "> ".concat(interaction.member, " - (").concat((_l = interaction.member) === null || _l === void 0 ? void 0 : _l.user.id, ")\n") +
+                                            "### \uD83D\uDCAC Request Details\n" +
+                                            "> **Stage:** ".concat(userData[0].stage, "\n") +
+                                            "> **Date and Time:** <t:".concat(unixTimestamp, ":F>\n") + // Full date and time format
+                                            "> **Department:** ".concat(userData[0].department, "\n\n") +
+                                            "> Interested? Click on the **Claim** button below.\n" +
+                                            "> Want to send the requester a message? Simply click on the **Send DM** button below.")
+                                            .setFooter({
+                                            text: "Training Request - Questions",
+                                        });
+                                        trainingChannel = (_m = interaction.guild) === null || _m === void 0 ? void 0 : _m.channels.cache.get(config.training_channel);
+                                        if (!(trainingChannel && trainingChannel.isTextBased())) return [3 /*break*/, 21];
+                                        action = new discord_js_1.ActionRowBuilder().addComponents(new discord_js_1.ButtonBuilder()
+                                            .setCustomId("claim")
+                                            .setEmoji("✅")
+                                            .setLabel("Claim")
+                                            .setStyle(discord_js_1.ButtonStyle.Success)
+                                            .setDisabled(false), new discord_js_1.ButtonBuilder()
+                                            .setCustomId("send_dm")
+                                            .setEmoji("💬")
+                                            .setLabel("Send DM")
+                                            .setStyle(discord_js_1.ButtonStyle.Secondary)
+                                            .setDisabled(false));
+                                        textChannel = trainingChannel;
+                                        return [4 /*yield*/, textChannel.send({
+                                                embeds: [toChannel],
+                                                components: [action],
+                                                content: "".concat(role_to_ping),
+                                            })];
+                                    case 18:
+                                        message_1 = _o.sent();
+                                        return [4 /*yield*/, (0, database_1.execute)("UPDATE trainings SET message_id = ? WHERE training_id = ?", [message_1.id, trainingID])];
+                                    case 19:
+                                        _o.sent();
+                                        return [4 /*yield*/, interaction.editReply({ embeds: [sentEmbed], components: [] })];
+                                    case 20:
+                                        _o.sent();
+                                        _o.label = 21;
+                                    case 21: return [2 /*return*/];
+                                }
+                            });
+                        }); });
+                        collector === null || collector === void 0 ? void 0 : collector.on("end", function (collected, reason) { return __awaiter(_this, void 0, void 0, function () {
+                            var tooLate;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        console.log("department");
+                                        if (!(reason === "time" && collected.size == 0)) return [3 /*break*/, 3];
+                                        return [4 /*yield*/, (0, database_1.execute)("DELETE FROM trainings WHERE training_id = ?", [
+                                                trainingID,
+                                            ])];
+                                    case 1:
+                                        _a.sent();
+                                        tooLate = new discord_js_1.EmbedBuilder()
+                                            .setColor("Red")
+                                            .setAuthor({
+                                            name: "".concat(interaction.client.user.username),
+                                            iconURL: "".concat(interaction.client.user.displayAvatarURL()),
+                                        })
+                                            .setTitle(":x: | Late Reply")
+                                            .setDescription("Dear ".concat(interaction.member, ", you did not answer in **60s**. Hence the input will be closed."))
+                                            .setFooter({ text: "Training Request - Questions" });
+                                        return [4 /*yield*/, interaction.editReply({
+                                                components: [],
+                                                embeds: [tooLate],
+                                            })];
+                                    case 2:
+                                        _a.sent();
+                                        _a.label = 3;
+                                    case 3: return [2 /*return*/];
+                                }
+                            });
+                        }); });
+                    }
+                    catch (e) {
+                        console.log(e);
+                    }
+                    _e.label = 9;
+                case 9: return [2 /*return*/];
             }
         });
     });

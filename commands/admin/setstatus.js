@@ -2,6 +2,8 @@ const {
   SlashCommandBuilder,
   EmbedBuilder,
   PermissionFlagsBits,
+  ActivityType,
+  Status,
 } = require("discord.js");
 const fs = require("fs");
 const n = require("../../config.json");
@@ -47,14 +49,25 @@ module.exports = {
     const status = interaction.options.getString("status");
     const activityType = interaction.options.getString("activity");
     const activityName = interaction.options.getString("activityname");
-
-    if (
-      !interaction.member.permissions.has(PermissionFlagsBits.Administrator)
-    ) {
+    function switcher() {
+      switch (status) {
+        case "online":
+          return "🟢 Online";
+        case "idle":
+          return "🟠 Idle";
+        case "dnd":
+          return "🔴 Do Not Disturb";
+        case "invisible":
+          return "🔘 Invisible";
+        default:
+          return "Unknown";
+      }
+    }
+    if (interaction.member.id !== n.owner_id) {
       const Embed = new EmbedBuilder()
         .setTitle(":x: | Insufficient Permissions")
         .setDescription(
-          `> ${interaction.member}, you don't have the required \`\`Administrator\`\` permissions to be able to use this command.\n> Please refrain from using this command.`
+          `> ${interaction.member}, you don't have the required \`\`Owner\`\` permissions to be able to use this command.\n> Please refrain from using this command.`
         )
         .setTimestamp()
         .setAuthor({
@@ -64,33 +77,35 @@ module.exports = {
         .setColor("Red");
       return interaction.reply({ ephemeral: true, embeds: [Embed] });
     }
-    let presenceData = { status };
+    let data = [];
 
     if (activityType && activityName) {
-      presenceData.activities = [
-        { name: activityName, type: activityType.toUpperCase() },
-      ];
+      console.log("yes");
+      data.push({ name: activityName, type: ActivityType[activityType] });
     }
-
-    await interaction.client.user.setPresence(presenceData);
+    console.log(status)
+    await interaction.client.user.setPresence({
+      activities: data,
+      status: `${status}`,
+    });
 
     const Success = new EmbedBuilder()
       .setTitle(":white_check_mark: | Successfully Changed Status")
       .setDescription(
         `> ${
           interaction.member
-        }, you have successfully changed the status of the bot. Below you can find more information about the status that is set:\n> ✅ **Status:** ${status}\n> **Activity:** ${
-          activityType && activityName
-            ? ` **${activityType} ${activityName}**`
-            : ""
-        }\n\n> **Please give it a few minutes to change.**`
+        }, you have successfully changed the status of the bot. Below you can find more information about the status that is set:\n\n> ✅ **Status:** ${switcher(
+          status
+        )}\n> **👾 Activity:** ${
+          activityType && activityName ? ` ${activityType} ${activityName}` : ""
+        }\n\n> **It may take a few minutes before changes become visible.**`
       )
       .setTimestamp()
       .setAuthor({
         name: `${interaction.client.user.username}`,
         iconURL: `${interaction.client.user.displayAvatarURL()}`,
       })
-      .setColor("Red");
+      .setColor("#686c70")
     await interaction.reply({ ephemeral: true, embeds: [Success] });
   },
 };
