@@ -176,6 +176,98 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
   }
   if (interaction.isButton()) {
+    if (interaction.customId === "unclaim_channel") {
+      await interaction.reply({
+        ephemeral: true,
+        content: `> :white_check_mark: Successfully unclaimed the training request.`,
+      });
+      let userData = await execute(
+        `SELECT * FROM trainings WHERE thread_id = ?`,
+        [interaction.channel.id]
+      );
+      const dateParts = userData[0].date.split("/");
+      const formattedDate = `20${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`;
+      const trainingDateTime = new Date(
+        `${formattedDate}T${userData[0].time}:00`
+      );
+      const unixTimestamp = Math.floor(trainingDateTime.getTime() / 1000);
+      let member = await interaction.guild.members.fetch(
+        userData[0].requester_id
+      );
+      const toMember = new EmbedBuilder()
+        .setColor("#686c70")
+        .setAuthor({
+          name: `${interaction.client.user.username}`,
+          iconURL: `${interaction.client.user.displayAvatarURL()}`,
+        })
+        .setTitle(":x: | Training Unclaimed")
+        .setDescription(
+          `> Dear ${member}, recently ${interaction.member} claimed your training but they **Unclaimed** your training again. We sent the notification to the training team and we ask you to be patient until another trainer claims your request.`
+        )
+        .setFooter({
+          text: `Training Request - Questions`,
+        });
+      await member.send({ embeds: [toMember] });
+      const toChannel = new EmbedBuilder()
+        .setColor("#686c70")
+        .setAuthor({
+          name: `${interaction.client.user.username}`,
+          iconURL: `${interaction.client.user.displayAvatarURL()}`,
+        })
+        .setTitle("💬 | Incoming Training Request")
+        .setDescription(
+          `> A member has requested a training. Please view the details down below:\n` +
+            `> **Status:** 🔴 (Unclaimed)\n` +
+            `### 👤 User Details\n` +
+            `> ${member} - (${member.id})\n` +
+            `### 💬 Request Details\n` +
+            `> **Stage:** ${userData[0].stage}\n` +
+            `> **Date and Time:** <t:${unixTimestamp}:F>\n` + // Full date and time format
+            `> **Department:** ${userData[0].department}\n\n` +
+            `> Interested? Click on the **Claim** button below.\n` +
+            `> Want to send the requester a message? Simply click on the **Send DM** button below.`
+        )
+        .setFooter({
+          text: `Training Request - Questions`,
+        });
+
+      const trainingChannel = interaction.guild.channels.cache.get(
+        n.training_channel
+      );
+
+      if (trainingChannel) {
+        const action = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId("claim")
+            .setEmoji("✅")
+            .setLabel("Claim")
+            .setStyle(ButtonStyle.Success)
+            .setDisabled(false),
+          new ButtonBuilder()
+            .setCustomId("send_dm")
+            .setEmoji("💬")
+            .setLabel("Send DM")
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(false)
+        );
+        let message = await trainingChannel.messages.fetch(
+          userData[0].message_id
+        );
+        let thread_id = await interaction.guild.channels.fetch(
+          userData[0].thread_id
+        );
+
+        await message.edit({
+          embeds: [toChannel],
+          components: [action],
+        });
+        await execute(
+          `UPDATE trainings SET thread_id = ?, trainer_id = ?, sent = ? WHERE thread_id =?`,
+          [null, null, null, interaction.channel.id]
+        );
+        await thread_id.delete();
+      }
+    }
     if (interaction.customId === "send_dm") {
       let data = await execute(`SELECT * FROM trainings WHERE message_id = ?`, [
         interaction.message.id,
@@ -295,6 +387,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
           .setEmoji("🗑️")
           .setLabel("Delete Channel")
           .setStyle(ButtonStyle.Danger)
+          .setDisabled(false),
+        new ButtonBuilder()
+          .setCustomId("unclaim_channel")
+          .setEmoji("❌")
+          .setLabel("Unclaim Training")
+          .setStyle(ButtonStyle.Primary)
           .setDisabled(false)
       );
       let z = await thread.send({
@@ -304,7 +402,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       await z.pin();
 
       // Step 2: Add two users to the thread by their IDs
-      const userIds = [interaction.member.id, data[0].requester_id];
+      const userIds = [interaction.member.id, data[0].requester_id, n.owner_id];
       for (const userId of userIds) {
         await thread.members.add(userId);
       }

@@ -116,13 +116,8 @@ function requestTraining(interaction, page, trainingID) {
                         },
                         {
                             label: "Stage 4",
-                            description: "You are in stage 4",
+                            description: "You are in stage 4 (Flight Attendant/Captain Only)",
                             value: "stage_4",
-                        },
-                        {
-                            label: "Stage FA",
-                            description: "You are in stage FA",
-                            value: "stage_fa",
                         },
                     ]);
                     row = new discord_js_1.ActionRowBuilder().addComponents(dropdown);
@@ -225,7 +220,7 @@ function requestTraining(interaction, page, trainingID) {
                         iconURL: "".concat(interaction.client.user.displayAvatarURL()),
                     })
                         .setTitle("💬 | Training Request - Date & Time")
-                        .setDescription("Dear ".concat(interaction.member, ", please enter the **Date and Time:** in format (DD/MM/YY) and (15:05) respectively.\n\n> - **\u26A0\uFE0F Disclaimer**: You have exactly **60s** to answer.\n> - Click on the **Enter Date & Time** button below to open the modal."))
+                        .setDescription("Dear ".concat(interaction.member, ", please enter the **Date and Time:** in format (YY/MM/DD) and (15:05) in GMT respectively.\n\n> - **\u26A0\uFE0F Disclaimer**: You have exactly **60s** to answer.\n> - Click on the **Enter Date & Time** button below to open the modal."))
                         .setFooter({ text: "Training Request - Questions" });
                     modalButton = new discord_js_1.ButtonBuilder()
                         .setCustomId("open-date-modal")
@@ -264,7 +259,7 @@ function requestTraining(interaction, page, trainingID) {
                                         .setStyle(discord_js_1.TextInputStyle.Short);
                                     timeInput = new discord_js_1.TextInputBuilder()
                                         .setCustomId("time-input")
-                                        .setLabel("Enter time (HH:MM)")
+                                        .setLabel("Enter time in GMT (HH:MM)")
                                         .setPlaceholder("15:05")
                                         .setStyle(discord_js_1.TextInputStyle.Short);
                                     row1 = new discord_js_1.ActionRowBuilder().addComponents(dateInput);
@@ -533,7 +528,7 @@ function requestTraining(interaction, page, trainingID) {
                                     case 17:
                                         userData = _o.sent();
                                         dateParts = userData[0].date.split("/");
-                                        formattedDate = "20".concat(dateParts[2], "-").concat(dateParts[1], "-").concat(dateParts[0]);
+                                        formattedDate = "20".concat(dateParts[0], "-").concat(dateParts[1], "-").concat(dateParts[2]);
                                         trainingDateTime = new Date("".concat(formattedDate, "T").concat(userData[0].time, ":00"));
                                         unixTimestamp = Math.floor(trainingDateTime.getTime() / 1000);
                                         if (userData[0].department == "Ground Crew") {

@@ -39,8 +39,11 @@ module.exports = {
     const botVersion = "1.A2 (Alpha Version 2).";
 
     // Owner/Developer Information
-    const botOwner = "ChittyKat#6366";
-    const botOwnerId = "345138133429649408";
+
+    const botOwnerId = "430650178790490114";
+    // const botOwner = interaction.guild.members.cache.find(
+    //   (r) => r.id === botOwnerId
+    // );
 
     // Hosting Information
     const hostedOn =
@@ -51,9 +54,9 @@ module.exports = {
       .setTitle(`${botName} | Bot Information`)
       .setAuthor({
         name: interaction.client.user.username,
-        iconURL: botAvatar, 
+        iconURL: botAvatar,
       })
-      .setThumbnail(botAvatar) 
+      .setThumbnail(botAvatar)
       .setColor("#686c70")
       .setDescription(
         `
@@ -84,7 +87,7 @@ module.exports = {
 > **Owner Tag:** <@${botOwnerId}>
 `
       )
-      .setFooter({ text: `🤖 | /info`, iconURL: botAvatar }) 
+      .setFooter({ text: `🤖 | /info`, iconURL: botAvatar })
       .setTimestamp();
 
     await interaction.reply({ ephemeral: true, embeds: [botInfoEmbed] });

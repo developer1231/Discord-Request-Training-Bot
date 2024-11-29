@@ -105,13 +105,11 @@ module.exports = {
         console.log(thirtyMinutesBefore.getTime());
         console.log(currentTimeInCEST.getTime());
         console.log(trainer_id);
-       
+
         if (
           trainer_id &&
           currentTimeInCEST.getTime() >= thirtyMinutesBefore.getTime()
-        
         ) {
-         
           const unixTimestamp = Math.floor(
             trainingDateTimeInCEST.getTime() / 1000
           );

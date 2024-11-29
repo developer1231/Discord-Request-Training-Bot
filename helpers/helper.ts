@@ -93,13 +93,8 @@ export async function requestTraining(
         },
         {
           label: "Stage 4",
-          description: "You are in stage 4",
+          description: "You are in stage 4 (Flight Attendant/Captain Only)",
           value: "stage_4",
-        },
-        {
-          label: "Stage FA",
-          description: "You are in stage FA",
-          value: "stage_fa",
         },
       ]);
 
@@ -187,7 +182,7 @@ export async function requestTraining(
       })
       .setTitle("💬 | Training Request - Date & Time")
       .setDescription(
-        `Dear ${interaction.member}, please enter the **Date and Time:** in format (DD/MM/YY) and (15:05) respectively.\n\n> - **⚠️ Disclaimer**: You have exactly **60s** to answer.\n> - Click on the **Enter Date & Time** button below to open the modal.`
+        `Dear ${interaction.member}, please enter the **Date and Time:** in format (YY/MM/DD) and (15:05) in GMT respectively.\n\n> - **⚠️ Disclaimer**: You have exactly **60s** to answer.\n> - Click on the **Enter Date & Time** button below to open the modal.`
       )
       .setFooter({ text: `Training Request - Questions` });
     const modalButton = new ButtonBuilder()
@@ -227,7 +222,7 @@ export async function requestTraining(
           .setStyle(TextInputStyle.Short);
         const timeInput = new TextInputBuilder()
           .setCustomId("time-input")
-          .setLabel("Enter time (HH:MM)")
+          .setLabel("Enter time in GMT (HH:MM)")
           .setPlaceholder("15:05")
           .setStyle(TextInputStyle.Short);
         const row1 = new ActionRowBuilder<TextInputBuilder>().addComponents(
@@ -489,7 +484,7 @@ export async function requestTraining(
           [trainingID]
         );
         const dateParts = userData[0].date.split("/");
-        const formattedDate = `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+        const formattedDate = `20${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`;
         const trainingDateTime = new Date(
           `${formattedDate}T${userData[0].time}:00`
         );
